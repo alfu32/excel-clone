@@ -25,6 +25,30 @@ NOT AVAILABLE FOR WINDOWS AT THE MOMENT!
 4. File handling - New, open and save button is available.
 5. UI - Clean and beautiful user interface with adpative cell size.
 
+
+### Formulas
+  Formulas reference cell content by cell identifier ( <letter(s)-number(s)> ), just like regular excel formulas.
+  ```
+    {{C1})+{{D3}}
+  ```
+  
+  One extra feature is that a cell can contain not only a formula but also a script. 
+  ```javascript
+    let m=await fetch("{{D4}}");let j=await m.json(); return j.version
+  ```
+  ranges can be either written like excel ranges
+  ```
+    {{C1}):{{D3}}
+  ```
+  or explicitly like this :
+  ```
+    range({{C1}},{{E20}})
+  ```
+  in any of the above cases the expression will be substituted by `range(a,b)` that returns a bidimensional raw slice of the underlying database,
+  please take that into account when using ranges in cell scripts.
+### Sheet macros and scripts
+  
+
 ## Screenshots
 ![Screenshot from 2021-05-23 00-42-21](https://user-images.githubusercontent.com/40262320/119238401-d6810900-bb5f-11eb-8c35-b9c8d04de5b4.png)
 
