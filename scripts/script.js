@@ -277,109 +277,29 @@ const handleAlignment = function (alignment, btnEl, cell) {
 /*********************FORMULA Functions*****************/
 
 const getCell = function (id) {
-    let [cid, rid] = id.split(/(\d+)/); // split string with number
-    cid = cid.charCodeAt(0) - 65; // convert char to num
-    rid--; // reduce rid to match idx
+    let cid=id.match(/^[A-Z]/g)[0].split("").map(c => c.charCodeAt(0) - 65).reduce( (acc,v,i,a) => acc+v*Math.pow(24,i),0)
+    let rid=Number(id.match(/[0-9]$/g)[0])-1
 
     return document.querySelector(`.grid__col[rid="${rid}"][cid="${cid}"]`);
 };
+const getCellValue = function (id) {
+    return document.querySelector(`.grid__col[rid="${rid}"][cid="${cid}"]`).innerText;
+};
 
 const getFormula = function (formula) {
-    const formulaArr = formula.split(" ");
-    for (let i = 0; i < formulaArr.length; i++) {
-        let ascii = formulaArr[i].charCodeAt(0);
-        if (ascii >= 65 && ascii <= 90) {
-            let parentCellId = formulaArr[i];
-            let pcell = getCell(parentCellId);
-            formulaArr[i] = pcell.innerText;
-        }
-    }
-
-    return formulaArr.join(" ");
+    return formula.replace(/^=/gi,"")
 };
 
 const evaluateFormula = function (formula) {
-    const operands = [];
-    const operators = [];
-
-    const exp = formula.split(" ");
-    for (let i = 0; i < exp.length; i++) {
-        let ch = exp[i];
-
-        if (ch == "(") {
-            operators.push(ch);
-        } else if (isFinite(ch)) {
-            operands.push(Number.parseFloat(ch));
-        } else if (ch == "+" || ch == "-" || ch == "*" || ch == "/") {
-            while (
-                operators.length > 0 &&
-                operators[operators.length - 1] != "(" &&
-                precedence(ch) <= precedence(operators[operators.length - 1])
-            ) {
-                const val2 = operands.pop();
-                const val1 = operands.pop();
-                const optr = operators.pop();
-
-                const finalVal = operation(val1, val2, optr);
-                console.log(finalVal);
-                operands.push(finalVal);
-            }
-            operators.push(ch);
-        } else if (ch == ")") {
-            while (
-                operators.length > 0 &&
-                operators[operators.length - 1] != "("
-            ) {
-                const val2 = operands.pop();
-                const val1 = operands.pop();
-                const optr = operators.pop();
-
-                const finalVal = operation(val1, val2, optr);
-                operands.push(finalVal);
-            }
-
-            if (operators.length > 0) {
-                operators.pop();
-            }
-        }
-    }
-
-    while (operators.length > 0) {
-        const val2 = operands.pop();
-        const val1 = operands.pop();
-        const optr = operators.pop();
-
-        const finalVal = operation(val1, val2, optr);
-        console.log(finalVal);
-        operands.push(finalVal);
-    }
-
-    return operands.pop();
+    const interpoateVarList=formula.match(/\$\{\s*[0-9A-Za-a]\s*\}/gi).map(param => param.replace("${","").replace("}","").map(p => `const ${p}=database.getCellValue("${p}")`)
+    const is_script = 
+    return `function evl(sheetDB){
+        ${interpoateVarList.join(";\n")}
+        ${formula.match(/return /g)?"":"return"} \`${formula}\`
+    }`
+    
 };
 
-const precedence = function (optr) {
-    switch (optr) {
-        case "+":
-        case "-":
-            return 1;
-        case "*":
-        case "/":
-            return 2;
-    }
-};
-
-const operation = function (val1, val2, optr) {
-    switch (optr) {
-        case "+":
-            return val1 + val2;
-        case "-":
-            return val1 - val2;
-        case "*":
-            return val1 * val2;
-        case "/":
-            return val1 / val2;
-    }
-};
 
 // set child of parents found in formula
 const setChild = function (formula, childID) {
